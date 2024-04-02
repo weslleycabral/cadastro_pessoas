@@ -1,9 +1,13 @@
 package org.weslleycabral.cadastro_pessoas.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -16,6 +20,9 @@ public class State implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     private String name;
+    @OneToMany(mappedBy = "state")
+    @JsonIgnore
+    private List<City> cities = new ArrayList<>();
 
     public State() {}
 
@@ -38,6 +45,10 @@ public class State implements Serializable {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public List<City> getCities() {
+        return cities;
     }
 
     @Override

@@ -26,13 +26,17 @@ public class Address implements Serializable {
     @JsonIgnore
     @ManyToMany(mappedBy = "addresses")
     private List<User> users = new ArrayList<>();
+    @ManyToOne
+    @JoinColumn(name = "city_id")
+    private City city;
     public Address() {}
 
-    public Address(Integer id, String street, String cep, String number) {
+    public Address(Integer id, String street, String cep, String number, City city) {
         this.id = id;
         this.street = street;
         this.cep = cep;
         this.number = number;
+        this.city = city;
     }
 
     public Integer getId() {
@@ -71,4 +75,11 @@ public class Address implements Serializable {
         return users;
     }
 
+    public City getCity() {
+        return city;
+    }
+
+    public void setCity(City city) {
+        this.city = city;
+    }
 }

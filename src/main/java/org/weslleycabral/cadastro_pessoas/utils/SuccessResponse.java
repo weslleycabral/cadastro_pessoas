@@ -25,6 +25,11 @@ public class SuccessResponse implements Serializable {
         this.dataUpdate = dataUpdate;
     }
 
+    public SuccessResponse(String message, LocalDateTime dataUpdate) {
+        this.message = message;
+        this.dataUpdate = dataUpdate;
+    }
+
     public String getMessage() {
         return message;
     }
