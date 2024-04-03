@@ -2,14 +2,11 @@ package org.weslleycabral.cadastro_pessoas.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.weslleycabral.cadastro_pessoas.entities.Address;
 import org.weslleycabral.cadastro_pessoas.entities.User;
-import org.weslleycabral.cadastro_pessoas.entities.dto.AddressDTO;
 import org.weslleycabral.cadastro_pessoas.entities.dto.UserDTO;
 import org.weslleycabral.cadastro_pessoas.repositories.UserRepository;
 import org.weslleycabral.cadastro_pessoas.services.exceptions.ObjectNotFoundException;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,90 +14,63 @@ import java.util.stream.Collectors;
 public class UserService {
 
     @Autowired
-    private UserRepository repository;
+    private UserRepository userRepository;
 
-    public UserDTO findById(Integer id) {
-        var user = repository.findById(id);
-        if (user.isPresent()) {
-            var userDTO = new UserDTO(user.get().getId(), user.get().getName(), user.get().getDateOfBirth(), user.get().getAddresses());
-            return userDTO;
-        } else {
-            StringBuilder msg = new StringBuilder();
-            msg.append("Usuário de ID ").append(id).append(" não existe");
-            throw new ObjectNotFoundException(msg.toString());
-        }
+    public UserDTO getUser(Integer id) {
+        return _converterForDtoUser(_getUser(id));
     }
 
-    public List<AddressDTO> findAddressById(Integer id) {
-        var user = repository.findById(id);
-        if (user.isPresent()){
-            if (!user.get().getAddresses().isEmpty()) {
-                var addressListDTO = new ArrayList<AddressDTO>();
-
-                for(Address a : user.get().getAddresses()) {
-                    var addressDTO = new AddressDTO(
-                            a.getStreet(),
-                            a.getNumber(),
-                            a.getCity().getName(),
-                            a.getCep());
-                    addressListDTO.add(addressDTO);
-                }
-
-                return addressListDTO;
-            } else {
-                StringBuilder msg = new StringBuilder();
-                msg.append("O usuário ").append(user.get().getName()).append(" não possui endereços cadastrados!");
-                throw new ObjectNotFoundException(msg.toString());
-            }
-        } else {
-            StringBuilder msg = new StringBuilder();
-            msg.append("Usuário de ID ").append(id).append(" não existe");
-            throw new ObjectNotFoundException(msg.toString());
-        }
-    }
-
-    public List<UserDTO> findAll() {
-        var userList = repository.findAll();
-        return userList.stream()
+    public List<UserDTO> getListUsers() {
+        return _getListUsers().stream()
                 .map(user -> {
-                    var dto = new UserDTO(user.getId(), user.getName(), user.getDateOfBirth(), user.getAddresses());
+                    var dto = new UserDTO(user.getId(), user.getName(), user.getDateOfBirth());
                     return dto;
                 }).collect(Collectors.toList());
     }
 
-    public UserDTO save(UserDTO userDTO) {
+    public UserDTO postUser(UserDTO userDTO) {
+        return _converterForDtoUser(_createUser(userDTO));
+    }
+
+    public UserDTO putUser(UserDTO userDTO, Integer id){
+        return _converterForDtoUser(_updateUser(userDTO, id));
+    }
+
+    // MÉTODOS PROTEGIDOS
+
+    protected User _getUser(Integer userId){
+        var user = userRepository.findById(userId);
+        if (user.isPresent()) {
+            return user.get();
+        } else {
+            StringBuilder msg = new StringBuilder();
+            msg.append("Usuário de ID ").append(userId).append(" não existe");
+            throw new ObjectNotFoundException(msg.toString());
+        }
+    }
+
+    protected List<User> _getListUsers(){
+        return userRepository.findAll();
+    }
+
+    protected User _createUser(UserDTO userDTO) {
         var user = new User(null, userDTO.name(), userDTO.dateOfBirth());
-        user = repository.save(user);
-        return new UserDTO(user.getId(),user.getName(),user.getDateOfBirth(),user.getAddresses());
+        return userRepository.save(user);
     }
 
-    public UserDTO update(UserDTO userDTO, Integer id){
-        var user = repository.findById(id);
-
-        if(user.isPresent()){
-            var userUpdate = user.get();
-            userUpdate.setName(userDTO.name());
-            userUpdate.setDateOfBirth(userDTO.dateOfBirth());
-            repository.save(userUpdate);
-            return new UserDTO(id, userUpdate.getName(), userUpdate.getDateOfBirth(), userUpdate.getAddresses());
-        } else {
-            StringBuilder msg = new StringBuilder();
-            msg.append("Usuário de ID ").append(id).append(" não existe");
-            throw new ObjectNotFoundException(msg.toString());
-        }
+    protected User _updateUser(UserDTO userDTO, Integer userId) {
+        var user = _getUser(userId);
+        user.setName(userDTO.name());
+        user.setDateOfBirth(userDTO.dateOfBirth());
+        return userRepository.save(user);
     }
 
-    public UserDTO delete(Integer id) {
-        var user = repository.findById(id);
-
-        if(user.isPresent()){
-            var deleteUser = user.get();
-            repository.deleteById(deleteUser.getId());
-            return new UserDTO(deleteUser.getId(), deleteUser.getName(), deleteUser.getDateOfBirth(), deleteUser.getAddresses());
-        } else {
-            StringBuilder msg = new StringBuilder();
-            msg.append("Usuário de ID ").append(id).append(" não existe");
-            throw new ObjectNotFoundException(msg.toString());
-        }
+    protected UserDTO _converterForDtoUser(User user) {
+        return new UserDTO(user.getId(), user.getName(), user.getDateOfBirth());
     }
+
+    protected void _saveUserDB(User user){
+        userRepository.save(user);
+    }
+
 }

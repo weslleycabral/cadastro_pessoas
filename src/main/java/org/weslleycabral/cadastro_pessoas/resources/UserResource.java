@@ -6,7 +6,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.weslleycabral.cadastro_pessoas.entities.dto.AddressDTO;
+import org.weslleycabral.cadastro_pessoas.entities.dto.NewAddressDTO;
 import org.weslleycabral.cadastro_pessoas.entities.dto.UserDTO;
+import org.weslleycabral.cadastro_pessoas.services.AddressService;
+import org.weslleycabral.cadastro_pessoas.services.SuccessResponseService;
 import org.weslleycabral.cadastro_pessoas.services.UserService;
 import org.weslleycabral.cadastro_pessoas.utils.SuccessResponse;
 
@@ -18,58 +21,67 @@ import java.util.List;
 public class UserResource {
 
     @Autowired
-    private UserService service;
+    private UserService userService;
 
-    @GetMapping("/{id}")
-    public ResponseEntity<UserDTO> getById(@PathVariable Integer id) {
-        var user = service.findById(id);
+    @Autowired
+    private AddressService addressService;
+
+    @Autowired
+    private SuccessResponseService successService;
+
+    // USER
+    @GetMapping()
+    public ResponseEntity<List<UserDTO>> getUsersList() {
+        var list = userService.getListUsers();
+        return ResponseEntity.ok().body(list);
+    }
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<UserDTO> getUserById(@PathVariable Integer userId) {
+        var user = userService.getUser(userId);
         return ResponseEntity.ok().body(user);
     }
 
-    @GetMapping("/{id}/address")
-    public ResponseEntity<List<AddressDTO>> getAllAddressById(@PathVariable Integer id) {
-        var allAddress = service.findAddressById(id);
+    @PostMapping
+    public ResponseEntity<SuccessResponse> postUser(@Valid @RequestBody UserDTO userDTO) {
+        var user = userService.postUser(userDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                successService.successResponse("Novo usuário cadastrado com sucesso!", user, LocalDateTime.now())
+        );
+    }
+
+    @PutMapping("/{userId}")
+    public ResponseEntity<SuccessResponse> putUser(@PathVariable Integer userId, @Valid @RequestBody UserDTO userDTO) {
+        var user = userService.putUser(userDTO, userId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                successService.successResponse("Usuário atualizado!", user, LocalDateTime.now()));
+    }
+
+    //ADDRESS
+    @GetMapping("/{userId}/address")
+    public ResponseEntity<List<AddressDTO>> getAddressListByUserId(@PathVariable Integer userId) {
+        var allAddress = addressService.getListAddress(userId);
         return ResponseEntity.ok().body(allAddress);
     }
 
-    @GetMapping()
-    public ResponseEntity<List<UserDTO>> getAll() {
-        var userList = service.findAll();
-        return ResponseEntity.ok().body(userList);
+    @GetMapping("/{userId}/address/{addressId}")
+    public ResponseEntity<AddressDTO> getAddressByUserId(@PathVariable Integer userId, @PathVariable Integer addressId) {
+        var allAddress = addressService.getAddress(userId, addressId);
+        return ResponseEntity.ok().body(allAddress);
     }
-
-    @PostMapping
-    public ResponseEntity<SuccessResponse> save(@Valid @RequestBody UserDTO userDTO) {
-        var newUser = service.save(userDTO);
+    @PostMapping("/{userId}/address")
+    public ResponseEntity<SuccessResponse> postAddress(@PathVariable Integer userId, @RequestBody NewAddressDTO newAddressDTO) {
+        var address = addressService.postAddress(userId, newAddressDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(
-            new SuccessResponse(
-                    "Novo usuário cadastrado com sucesso!",
-                    newUser,
-                    LocalDateTime.now()
-            )
+                successService.successResponse("Endereço criado com sucesso!", address, LocalDateTime.now()));
+    }
+
+    @PutMapping("/{userId}/address/{addressId}")
+    public ResponseEntity<SuccessResponse> putAddress(@PathVariable Integer userId, @PathVariable Integer addressId, @RequestBody NewAddressDTO newAddressDTO) {
+        var address = addressService.putAddress(userId, addressId, newAddressDTO);
+        return ResponseEntity.ok().body(
+                successService.successResponse("Endereço atualizado!", address, LocalDateTime.now())
         );
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<SuccessResponse> update(@PathVariable Integer id, @Valid @RequestBody UserDTO userDTO) {
-        var userUpdate = service.update(userDTO, id);
-        return ResponseEntity.status(HttpStatus.CREATED).body(
-                new SuccessResponse(
-                        "Usuário atualizado com sucesso!",
-                        userUpdate,
-                        LocalDateTime.now()
-                )
-        );
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<SuccessResponse> update(@PathVariable Integer id) {
-        service.delete(id);
-        return ResponseEntity.status(HttpStatus.OK).body(
-                new SuccessResponse(
-                        "Usuário removido com sucesso!",
-                        LocalDateTime.now()
-                )
-        );
-    }
 }

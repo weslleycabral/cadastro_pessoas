@@ -1,6 +1,4 @@
 package org.weslleycabral.cadastro_pessoas.entities;
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 
 import java.io.Serial;
@@ -8,7 +6,6 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 
@@ -23,6 +20,7 @@ public class User implements Serializable {
     private Integer id;
     private String name;
     private LocalDate dateOfBirth;
+    private Integer principalAddress;
     @ManyToMany
     @JoinTable(
             name = "USER_ADDRESS",
@@ -37,6 +35,7 @@ public class User implements Serializable {
         this.id = id;
         this.name = name;
         this.dateOfBirth = LocalDate.parse(dateOfBirth, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        this.principalAddress = 0;
     }
 
     public Integer getId() {
@@ -63,6 +62,22 @@ public class User implements Serializable {
         this.dateOfBirth = LocalDate.parse(dateOfBirth, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
     }
 
+    public List<Address> getAddresses() {
+        return addresses;
+    }
+
+    public void setAddresses(List<Address> addresses) {
+        this.addresses = addresses;
+    }
+
+    public Integer getPrincipalAddress() {
+        return principalAddress;
+    }
+
+    public void setPrincipalAddress(Integer principalAddress) {
+        this.principalAddress = principalAddress;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -75,9 +90,4 @@ public class User implements Serializable {
     public int hashCode() {
         return Objects.hash(id);
     }
-
-    public List<Address> getAddresses() {
-        return addresses;
-    }
-
 }
